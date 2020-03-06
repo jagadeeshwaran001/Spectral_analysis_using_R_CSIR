@@ -1,0 +1,143 @@
+library(readxl)
+
+#..........................................FUNCTIONs....................................#
+
+corcoef<-function(x,y)
+{
+  covar=(length(x)*sum(x*y))-(sum(x)*sum(y))
+  stdivofx=sqrt((length(x)*sum(x**2))-((sum(x))**2))
+  stdivofy=sqrt((length(y)*sum(y**2))-((sum(y))**2))
+  totsrdofxy=stdivofx*stdivofy
+  corre=covar/totsrdofxy
+  return(corre)
+}
+ecd<-function(x,y,c)
+{
+  var1<-c(x[1:c])
+  var2<-c(y[1:c])
+  result<-var1-var2
+  mn<-sum(result)/ncol(data)
+  mn<-abs(mn)
+  return(mn)
+}
+p<-function(x,y,c)
+{
+  b<-list()
+  count<-0
+  for(i in 1:c)
+  {
+    if(x[i]>=y[i]){
+      val1<-x[i]
+      val2<-y[i]
+      var<-val2/val1
+      var<-var*100
+      b<-c(b,var)
+      if((var>=80)|(is.nan(var))){
+        count<-count+1
+      }
+    }
+    else if(x[i]<y[i]){
+      val1<-x[i]
+      val2<-y[i]
+      var<-val1/val2
+      var<-var*100
+      b<-c(b,var)
+      if((var>=80)|(is.nan(var))){
+        count<-count+1
+      }
+    }
+  }
+  count<-count/c
+  count<-count*100
+  return(count)
+}
+options(max.print = 2222)
+print("please choose the dataset to be loaded...(only .xlsx is supported)")
+Sys.sleep(2)
+data <-read_excel(file.choose(),col_names = FALSE)
+shell("cls")
+print("please choose the reference to be loaded...(only .xlsx is supported)")
+Sys.sleep(2)
+ref_data<-read_excel(file.choose(),col_names = FALSE)
+shell("cls")
+if(nrow(data)<ncol(data))
+{
+  ref<-as.double(ref_data[1,])
+  a=list()
+  nr=nrow(data)
+  nc=ncol(data)
+  for(i in 1:nr)
+  {
+    b=list(as.double(data[i,]))
+    a<-c(a,b)
+  }
+}else if(nrow(data)>ncol(data)){
+  ref<-as.double(data[,1])
+  a=list()
+  nc=nrow(data)
+  nr=ncol(data)
+  for(i in 2:nr)
+  {
+    b=list(as.double(data[,i]))
+    a<-c(a,b)
+  }
+}else if(nrow(data)==ncol(data))
+{
+  print("If the spectral analysis is saved in horizondal enter 1\nor\nIf the spectral analysis is saved in horizondal enter 2")
+  Sys.sleep(2)
+  shell("cls")
+  verorhor<-scan("stdin",n=1)
+  if(verorhor==1){
+    ref<-as.double(ref_data[1,])
+    a=list()
+    nr=nrow(data)
+    nc=ncol(data)
+    for(i in 1:nr)
+    {
+      b=list(as.double(data[i,]))
+      a<-c(a,b)
+    }
+  }else if(verorhor==2){
+    ref<-as.double(data[,1])
+    a=list()
+    nc=nrow(data)
+    nr=ncol(data)
+    for(i in 2:nr)
+    {
+      b=list(as.double(data[,i]))
+      a<-c(a,b)
+    }
+  }
+}
+for(i in 1:nr)
+{
+  res1<-FALSE
+  res2<-FALSE
+  res3<-FALSE
+  temp2<-as.double(unlist(a[i]))
+  r<-corcoef(ref,temp2)
+  cat("\n The corelation coeffient between ref_data and test_data",i," is :",r)
+  e<-ecd(ref,temp2,nc)
+  cat("\n mean of euclidean distance between ref_data and test_data",i," is :",e)
+  perc<-p(ref,temp2,nc)
+  cat("\n",perc,"% of test_data",i," is matching with ref_data.")
+  if((r>=0.9236)&(r<=1))
+  {
+    res1<-TRUE
+  }
+  if((e>=0)&(e<=0.0325))
+  {
+    res2<-TRUE
+  }
+  if(perc>75)
+  {
+    res3<-TRUE
+  }
+  if(res1&res2&res3)
+  {
+    cat("\n \n THE TEST_DATA",i," IS MATCHING.\n")
+  }else{
+    cat("\n \n THE TEST_DATA",i," IS NOT MATCHING.\n")
+  }
+  
+}
